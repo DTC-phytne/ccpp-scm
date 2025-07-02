@@ -4,8 +4,8 @@
 	branch = main
 [submodule "ccpp-physics"]
 	path = ccpp/physics
-	url = https://github.com/mzhangw/ccpp-physics
-	branch = progomega
+	url = https://github.com/DTC-phytne/ccpp-physics
+	branch = progomega_w2d
 [submodule "CMakeModules"]
 	path = CMakeModules
 	url = https://github.com/noaa-emc/CMakeModules
