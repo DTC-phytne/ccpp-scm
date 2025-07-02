@@ -268,6 +268,9 @@ subroutine output_init_interstitial(ncid, time_inst_id, time_rad_id, hor_dim_id,
   call NetCDF_def_var(ncid, 'tau_v',  NF90_FLOAT, "surface y-wind stress", "Pa",         dummy_id, (/ hor_dim_id, time_inst_id /))
   if (physics%model%imfdeepcnv >= 0 .or. physics%model%imfshalcnv >= 0) then
     call NetCDF_def_var(ncid, 'upd_mf', NF90_FLOAT, "updraft mass flux",     "kg m-2 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+    !mzhang
+    call NetCDF_def_var(ncid, 'w_out', NF90_FLOAT, "diagnostic output w",   "m s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
+    call NetCDF_def_var(ncid, 'w_2dout', NF90_FLOAT, "diagnostic 2D output w",     "m s-1", dummy_id, (/ hor_dim_id, time_inst_id /))
   end if
   call NetCDF_def_var(ncid, 'dwn_mf', NF90_FLOAT, "downdraft mass flux",   "kg m-2 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'det_mf', NF90_FLOAT, "detrainment mass flux", "kg m-2 s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
@@ -610,6 +613,9 @@ subroutine output_append_interstitial_inst(ncid, scm_state, physics)
     call NetCDF_put_var(ncid, "tau_v",   physics%Interstitial(1)%dvsfc1(:), scm_state%itt_out)
     if (physics%model%imfdeepcnv >= 0 .or. physics%model%imfshalcnv >= 0) then
       call NetCDF_put_var(ncid, "upd_mf",  physics%Tbd%ud_mf(:,:), scm_state%itt_out)
+      !mzhang
+      call NetCDF_put_var(ncid, "w_out",  physics%Tbd%w_out(:,:), scm_state%itt_out)
+      call NetCDF_put_var(ncid, "w_2dout",  physics%Tbd%w_2dout(:), scm_state%itt_out)
     end if
     call NetCDF_put_var(ncid, "dwn_mf",  physics%Interstitial(1)%dd_mf(:,:), scm_state%itt_out)
     call NetCDF_put_var(ncid, "det_mf",  physics%Interstitial(1)%dt_mf(:,:), scm_state%itt_out)

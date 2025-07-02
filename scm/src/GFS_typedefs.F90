@@ -1806,6 +1806,9 @@ module GFS_typedefs
 !--- Diagnostic that needs to be carried over to the next time step (removed from diag_type)
     real (kind=kind_phys), pointer :: hpbl     (:)     => null()  !< Planetary boundary layer height
     real (kind=kind_phys), pointer :: ud_mf  (:,:)     => null()  !< updraft mass flux
+    !mzhang
+    real (kind=kind_phys), pointer :: w_out  (:,:)     => null()
+    real (kind=kind_phys), pointer :: w_2dout  (:)    => null()
 
     !--- dynamical forcing variables for Grell-Freitas convection
     real (kind=kind_phys), pointer :: forcet (:,:)     => null()  !<
@@ -7429,6 +7432,13 @@ module GFS_typedefs
     if (Model%imfdeepcnv .ge. 0 .or. Model%imfshalcnv .ge. 0) then
        allocate (Tbd%ud_mf(IM, Model%levs))
        Tbd%ud_mf = zero
+       !mzhang
+       allocate (Tbd%w_out(IM, Model%levs))
+       Tbd%w_out = zero
+       allocate (Tbd%w_2dout (IM))
+       Tbd%w_2dout   = zero
+
+
     endif
 
     if (Model%imfdeepcnv == Model%imfdeepcnv_gf .or. Model%imfdeepcnv == Model%imfdeepcnv_ntiedtke .or.  Model%imfdeepcnv == Model%imfdeepcnv_c3) then

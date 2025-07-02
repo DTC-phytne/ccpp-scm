@@ -8106,6 +8106,22 @@
   type = real
   kind = kind_phys
   active = ( control_for_deep_convection_scheme .ge. 0 .or. control_for_shallow_convection_scheme .ge. 0 )
+[w_out]
+  standard_name = diagnostic_output_w
+  long_name = diagnostic output w
+  units = m s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  active = ( control_for_deep_convection_scheme .ge. 0 .or. control_for_shallow_convection_scheme .ge. 0 )
+[w_2dout]
+  standard_name = diagnostic_2D_output_w
+  long_name = diagnostic 2D output w
+  units = m s-1
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  active = ( control_for_deep_convection_scheme .ge. 0 .or. control_for_shallow_convection_scheme .ge. 0 )
 [in_nm]
   standard_name = ice_nucleation_number_from_climatology
   long_name = ice nucleation number in MG MP
