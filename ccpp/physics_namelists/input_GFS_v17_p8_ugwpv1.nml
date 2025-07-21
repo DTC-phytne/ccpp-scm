@@ -47,7 +47,7 @@
   betascu      = 8.0
   betamcu      = 1.0
   betadcu      = 2.0
-  progomega    = .true.
+  progomega    = .False.
   ialb         = 2
   iems         = 2 
   iaer         = 1011
