@@ -12,7 +12,7 @@
   ltaerosol    = .false.
   lradar       = .true.
   ttendlim     = -999
-  dt_inner     = 150
+  dt_inner     = 300
   sedi_semi    = .true.
   decfl        = 10
   oz_phys      = .false.
@@ -37,12 +37,13 @@
   do_ugwp_v1_orog_only = .false.
   do_gwd_opt_psl = .true.
   psl_gwd_dx_factor = 6.0
+  do_ngw_ec    =  .true.
   min_lakeice  = 0.15
   min_seaice   = 1.0e-6
   use_cice_alb = .true.
   pdfcld       = .false.
-  fhswr        = 1200.
-  fhlwr        = 1200.
+  fhswr        = 3600.
+  fhlwr        = 3600.
   progsigma    = .true.
   progomega    = .false.
   betascu      = 8.0
@@ -71,10 +72,11 @@
   random_clds  = .false.
   trans_trac   = .true.
   cnvcld       = .true.
+  xr_cnvcld    = .true.
   imfshalcnv   = 2
   imfdeepcnv   = 2
   ras          = .false.
-  cdmbgwd      = 2.5,7.5,1.0,1.0
+  cdmbgwd      = 10.0,3.5,1.0,1.0
   prslrd0      = 0.
   ivegsrc      = 1
   isot         = 1
@@ -86,6 +88,7 @@
   iopt_run     = 1
   iopt_sfc     = 3
   iopt_trs     = 2
+  iopt_diag    = 2
   iopt_frz     = 1
   iopt_inf     = 1
   iopt_rad     = 3
@@ -118,6 +121,7 @@
   rrtmgp_nGptsLW = 128
   rrtmgp_nBandsLW = 16
   rrtmgp_nBandsSW = 14
+  use_med_flux = .false.
   frac_grid    = .true.
   cplchm       = .false.
   cplflx       = .false.
@@ -135,7 +139,14 @@
   nthresh      = 18
   ca_trigger   = .true.
   nspinup      = 1
-  iseed_ca     = 1448371824
+  iseed_ca     = 240501153
+  lndp_type   = 0
+  n_var_lndp  = 0
+  lcnorm  = .false.
+  pert_mp = .false.
+  pert_radtend = .false.
+  pert_clds = .false.
+
 /
 
 &cires_ugwp_nml
