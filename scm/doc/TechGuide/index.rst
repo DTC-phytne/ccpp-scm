@@ -1,5 +1,4 @@
 CCPP Single Column Model (SCM) User and Technical Guide v7.0.1
-============================
 
 .. toctree::
    :numbered:
@@ -14,5 +13,3 @@ CCPP Single Column Model (SCM) User and Technical Guide v7.0.1
    chap_cases
    chap_ccpp
    chap_hsd
-
-

@@ -12,6 +12,7 @@ module missing_values
 end module missing_values
 
 module data_qc
+  use iso_fortran_env, only: error_unit
   use scm_kinds, only : sp, dp, qp, kind_scm_sp, kind_scm_dp
   use missing_values, only: missing_value_sp, missing_value_dp, missing_value_int
 
@@ -51,7 +52,6 @@ module data_qc
   end interface
 
   contains
-  
   function is_missing_value_int(var) result(missing)
     integer, intent(in) :: var
     logical :: missing
@@ -94,7 +94,7 @@ module data_qc
     missing = .false.
     if ( ANY(var == missing_value_int)) missing = .true.
   end function check_missing_int_1d
-  
+
   function check_missing_int_2d(var) result(missing)
     integer, dimension(:,:), intent(in) :: var
     logical :: missing
@@ -102,7 +102,7 @@ module data_qc
     missing = .false.
     if ( ANY(var == missing_value_int)) missing = .true.
   end function check_missing_int_2d
-  
+
   function check_missing_int_3d(var) result(missing)
     integer, dimension(:,:,:), intent(in) :: var
     logical :: missing
@@ -111,6 +111,7 @@ module data_qc
     if ( ANY(var == missing_value_int)) missing = .true.
   end function check_missing_int_3d
   
+
   function check_missing_int_4d(var) result(missing)
     integer, dimension(:,:,:,:), intent(in) :: var
     logical :: missing
@@ -135,6 +136,7 @@ module data_qc
     if ( ANY(var == missing_value_sp)) missing = .true.
   end function check_missing_real_sp_1d
   
+
   function check_missing_real_sp_2d(var) result(missing)
     real(kind=sp), dimension(:,:), intent(in) :: var
     logical :: missing
@@ -142,7 +144,7 @@ module data_qc
     missing = .false.
     if ( ANY(var == missing_value_sp)) missing = .true.
   end function check_missing_real_sp_2d
-  
+
   function check_missing_real_sp_3d(var) result(missing)
     real(kind=sp), dimension(:,:,:), intent(in) :: var
     logical :: missing
@@ -150,7 +152,7 @@ module data_qc
     missing = .false.
     if ( ANY(var == missing_value_sp)) missing = .true.
   end function check_missing_real_sp_3d
-  
+
   function check_missing_real_sp_4d(var) result(missing)
     real(kind=sp), dimension(:,:,:,:), intent(in) :: var
     logical :: missing
@@ -212,7 +214,7 @@ module data_qc
       set_var = input
     else
       if (req) then
-        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
+        write(error_unit,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
         error stop "Variable in the case data file had missing data, but it is required for the given physics configuration."
       end if
     end if
@@ -232,7 +234,7 @@ module data_qc
       set_var = input
     else
       if (req) then
-        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
+        write(error_unit,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
         error stop "The variable in the case data file had missing data, but it is required for the given physics configuration"
       end if
     end if
@@ -252,7 +254,7 @@ module data_qc
       set_var = input
     else
       if (req) then
-        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
+        write(error_unit,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
         error stop "The variable in the case data file had missing data, but it is required for the given physics configuration"
       end if
     end if
@@ -272,7 +274,7 @@ module data_qc
       set_var = input
     else
       if (req) then
-        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
+        write(error_unit,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
         error stop "The variable in the case data file had missing data, but it is required for the given physics configuration"
       end if
     end if
@@ -292,7 +294,7 @@ module data_qc
       set_var = input
     else
       if (req) then
-        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
+        write(error_unit,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
         error stop "The variable in the case data file had missing data, but it is required for the given physics configuration"
       end if
     end if
@@ -312,7 +314,7 @@ module data_qc
       set_var = input
     else
       if (req) then
-        write(0,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
+        write(error_unit,'(a,i0,a)') "The variable '" // input_name // "' in the case data file had missing data, but it is required for the given physics configuration. Stopping..."
         error stop "The variable in the case data file had missing data, but it is required for the given physics configuration"
       end if
     end if
@@ -323,6 +325,7 @@ end module data_qc
 
 module scm_utils
 
+use iso_fortran_env, only: error_unit
 use scm_kinds, only: sp, dp, qp, kind_scm_dp
 use scm_physical_constants, only: con_rd, con_g
 
@@ -497,6 +500,7 @@ module NetCDF_read
   use scm_kinds, only : sp, dp, qp, kind_scm_sp, kind_scm_dp
   use missing_values
   use data_qc, only: is_missing_value, check_missing
+  use iso_fortran_env, only: error_unit
   use netcdf
 
   implicit none
@@ -880,7 +884,7 @@ module NetCDF_read
     if (req) then
       ierr = NF90_INQUIRE_ATTRIBUTE(ncid, var_id, att_name)
       if (ierr /= NF90_NOERR) then
-        write(*,*) 'There was an error reading the required '//adjustl(trim(att_name))//' attribute. Stopping...'
+        write(error_unit,*) 'There was an error reading the required '//adjustl(trim(att_name))//' attribute. Stopping...'
         error stop "There was an error reading the required attribute"
       else
         call check(NF90_GET_ATT(ncid, var_id, att_name, att_data),att_name)
@@ -908,7 +912,7 @@ module NetCDF_read
     if (req) then
       ierr = NF90_INQUIRE_ATTRIBUTE(ncid, var_id, att_name)
       if (ierr /= NF90_NOERR) then
-        write(*,*) 'There was an error reading the required '//adjustl(trim(att_name))//' attribute. Stopping...'
+        write(error_unit,*) 'There was an error reading the required '//adjustl(trim(att_name))//' attribute. Stopping...'
         error stop "There was an error reading the required attribute"
       else
         call check(NF90_GET_ATT(ncid, var_id, att_name, att_data),att_name)
@@ -936,7 +940,7 @@ module NetCDF_read
     if (req) then
       ierr = NF90_INQUIRE_ATTRIBUTE(ncid, var_id, att_name)
       if (ierr /= NF90_NOERR) then
-        write(*,*) 'There was an error reading the required '//adjustl(trim(att_name))//' attribute. Stopping...'
+        write(error_unit,*) 'There was an error reading the required '//adjustl(trim(att_name))//' attribute. Stopping...'
         error stop "There was an error reading the required attribute"
       else
         call check(NF90_GET_ATT(ncid, var_id, att_name, att_data),att_name)
@@ -964,7 +968,7 @@ module NetCDF_read
     if (req) then
       ierr = NF90_INQUIRE_ATTRIBUTE(ncid, var_id, att_name)
       if (ierr /= NF90_NOERR) then
-        write(*,*) 'There was an error reading the required '//adjustl(trim(att_name))//' attribute. Stopping...'
+        write(error_unit,*) 'There was an error reading the required '//adjustl(trim(att_name))//' attribute. Stopping...'
         error stop "There was an error reading the required attribute"
       else
         call check(NF90_GET_ATT(ncid, var_id, att_name, att_data),att_name)
@@ -993,7 +997,7 @@ module NetCDF_read
     if (req) then
       ierr = NF90_INQUIRE_ATTRIBUTE(ncid, var_id, att_name, xtype = type)
       if (ierr /= NF90_NOERR) then
-        write(*,*) 'There was an error reading the required '//adjustl(trim(att_name))//' attribute. Stopping...'
+        write(error_unit,*) 'There was an error reading the required '//adjustl(trim(att_name))//' attribute. Stopping...'
         error stop "There was an error reading the required attribute"
       else
         if (type == NF90_CHAR) then
@@ -1036,7 +1040,7 @@ module NetCDF_read
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
       if (check_missing(var_data)) then
-        write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
+        write(error_unit,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         error stop "Missing variable"
       end if
     else
@@ -1052,7 +1056,7 @@ module NetCDF_read
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
       if (check_missing(var_data)) then
-        write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
+        write(error_unit,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         error stop "Missing variable"
       end if
     else
@@ -1068,7 +1072,7 @@ module NetCDF_read
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
       if (check_missing(var_data)) then
-        write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
+        write(error_unit,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         error stop "Missing variable"
       end if
     else
@@ -1084,7 +1088,7 @@ module NetCDF_read
     if (var_ctl > 0) then
       call NetCDF_read_var(ncid, var_name, .False., var_data)
       if (check_missing(var_data)) then
-        write(*,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
+        write(error_unit,*) 'The global attribute '//var_att//' in '//filename//' indicates that the variable '//var_name//' should be present, but it is missing. Stopping ...'
         error stop "Missing variable"
       end if
     else
@@ -1095,6 +1099,7 @@ module NetCDF_read
 end module NetCDF_read
 
 module NetCDF_def
+  use iso_fortran_env, only: error_unit
   use NetCDF_read, only : check
   use netcdf
 
@@ -1125,7 +1130,7 @@ module NetCDF_def
     elseif (var_type == NF90_INT) then
       call CHECK(NF90_PUT_ATT(NCID=ncid,VARID=varid,NAME="_FillValue",VALUES=missing_value_int),var_name)
     else
-      write(0,'(a,i0,a)') "The variable '" // var_name // "' is defined as a type other than NF90_FLOAT or NF90_INT. Stopping..."
+      write(error_unit,'(a,i0,a)') "The variable '" // var_name // "' is defined as a type other than NF90_FLOAT or NF90_INT. Stopping..."
       error stop "Variable defined as a type other than NF90_FLOAT or NF90_INT."
     end if
 

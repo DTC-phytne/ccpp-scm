@@ -8,6 +8,7 @@ use missing_values, only: missing_value
 use data_qc, only: is_missing_value, check_missing
 use scm_kinds, only: sp, dp, qp
 use scm_type_defs, only: character_length
+use iso_fortran_env, only: error_unit
 use netcdf
 
 implicit none
@@ -65,6 +66,7 @@ subroutine get_config_nml(scm_state)
   logical              :: model_ics !<  true means have land info too
   logical              :: lsm_ics !< true when LSM initial conditions are included (but not all ICs from another model)
   logical              :: do_spinup
+  logical              :: do_sst_initialize_only
   integer              :: reference_profile_choice !< 1: McClatchey profile, 2: mid-latitude summer standard atmosphere
   integer              :: year, month, day, hour, min
   real(kind=dp)        :: column_area
@@ -82,7 +84,7 @@ subroutine get_config_nml(scm_state)
 
   NAMELIST /case_config/ npz_type, vert_coord_file, case_name, dt, runtime, runtime_mult, n_itt_out, n_itt_diag, &
     n_levels, output_dir, thermo_forcing_type, model_ics, &
-    lsm_ics, do_spinup, C_RES, spinup_timesteps, mom_forcing_type, relax_time, sfc_type, sfc_flux_spec, &
+    lsm_ics, do_spinup, do_sst_initialize_only, C_RES, spinup_timesteps, mom_forcing_type, relax_time, sfc_type, sfc_flux_spec, &
     sfc_roughness_length_cm, reference_profile_choice, year, month, day, hour, min, &
     column_area, input_type
 
@@ -118,6 +120,7 @@ subroutine get_config_nml(scm_state)
   model_ics = .false.
   lsm_ics = .false.
   do_spinup = .false.
+  do_sst_initialize_only = .false.
   reference_profile_choice = 1
   year = 2006
   month = 1
@@ -128,7 +131,7 @@ subroutine get_config_nml(scm_state)
 
   open(unit=10, file=experiment_namelist, status='old', action='read', iostat=ioerror)
   if(ioerror /= 0) then
-    write(*,'(a,i0)') 'There was an error opening the file ' // experiment_namelist // &
+    write(error_unit,'(a,i0)') 'There was an error opening the file ' // experiment_namelist // &
                       '; error code = ', ioerror
     error stop "error opening namelist"
   else
@@ -136,7 +139,7 @@ subroutine get_config_nml(scm_state)
   end if
 
   if(ioerror /= 0) then
-    write(*,'(a,i0)') 'There was an error reading the namelist case_config in the file '&
+    write(error_unit,'(a,i0)') 'There was an error reading the namelist case_config in the file '&
                       // experiment_namelist // '; error code = ',ioerror
     error stop "error opening namelist"
   end if
@@ -202,6 +205,7 @@ subroutine get_config_nml(scm_state)
   scm_state%model_ics = model_ics
   scm_state%lsm_ics = lsm_ics
   scm_state%do_spinup = do_spinup
+  scm_state%do_sst_initialize_only = do_sst_initialize_only
   scm_state%reference_profile_choice = reference_profile_choice
   scm_state%relax_time = relax_time
   scm_state%input_type = input_type
@@ -503,7 +507,7 @@ subroutine get_case_init(scm_state, scm_input)
   call NetCDF_read_var(grp_ncid, "thetail", .False., input_thetail)
   call NetCDF_read_var(grp_ncid, "temp", .False., input_temp)
   if (check_missing(input_thetail) .and. check_missing(input_temp)) then
-    write(*,*) "One of thetail or temp variables must be present in ",trim(adjustl(scm_state%case_name))//'.nc',". Stopping..."
+    write(error_unit,*) "One of thetail or temp variables must be present in ",trim(adjustl(scm_state%case_name))//'.nc',". Stopping..."
     error stop "One of thetail or temp variables"
   end if
   call NetCDF_read_var(grp_ncid, "qt",    .True., input_qt   )
@@ -1218,8 +1222,8 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   else if (adjustl(trim(tmpUnits)) == 'm') then
     lev_in_altitude = .true.
   else
-    write(0,'(a,i0,a)') "The variable 'lev' in the case data file had units different than 'm', 'pa', or 'Pa', but it is expected to be altitude in m or pressure in Pa. Stopping..."
-    STOP
+    write(error_unit,'(a,i0,a)') "The variable 'lev' in the case data file had units different than 'm', 'pa', or 'Pa', but it is expected to be altitude in m or pressure in Pa. Stopping..."
+    error stop
   end if
 
   !### TO BE USED IF DEPHY-SCM can be extended to include model ICs ###
@@ -1540,7 +1544,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
       end do
     end if
   end if
-  
+
   call NetCDF_read_var(ncid, "ps", .True., input_pres_surf)
   call NetCDF_read_var(ncid, "ua", .True., input_u)
   call NetCDF_read_var(ncid, "va", .True., input_v)
@@ -2042,7 +2046,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end if !ql test
   else
     !no qv or qt
-    write(*,*) 'When reading '//trim(adjustl(scm_state%case_name))//'.nc, all of the supported moisture variables (qv, qt, rv, rt) were missing. Stopping...'
+    write(error_unit,*) 'When reading '//trim(adjustl(scm_state%case_name))//'.nc, all of the supported moisture variables (qv, qt, rv, rt) were missing. Stopping...'
     error stop "Aall of the supported moisture variables (qv, qt, rv, rt) were missing"
   end if
 
@@ -2072,7 +2076,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     !since thetail is present, choose to use it, and set the alternative temperature to missing, even if it is also present in the file
     scm_input%input_temp = missing_value
   else
-    write(*,*) 'When reading '//trim(adjustl(scm_state%case_name))//'.nc, all of the supported temperature variables (temp, theta, thetal) were missing. Stopping...'
+    write(error_unit,*) 'When reading '//trim(adjustl(scm_state%case_name))//'.nc, all of the supported temperature variables (temp, theta, thetal) were missing. Stopping...'
     error stop "All of the supported temperature variables (temp, theta, thetal) were missing"
   end if
   
@@ -2143,7 +2147,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
 
   if (input_surfaceForcingTemp == 'ts') then
     if (check_missing(input_force_ts)) then
-      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable ts should be present, but it is missing. Stopping ...'
+      write(error_unit,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable ts should be present, but it is missing. Stopping ...'
       error stop "The global attribute surfaceForcing indicates that the variable ts should be present, but it is missing"
     else
       !overwrite sfc_flux_spec
@@ -2175,7 +2179,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
 
     !kinematic surface fluxes are specified (but may need to be converted)
     if (check_missing(input_force_wpthetap(:))) then
-      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable wpthetap should be present, but it is missing. Stopping ...'
+      write(error_unit,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable wpthetap should be present, but it is missing. Stopping ...'
       error stop "The global attribute surfaceForcing indicates that the variable wpthetap should be present, but it is missing."
     else
       !convert from theta to T
@@ -2206,7 +2210,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
     end if
 
     if (check_missing(input_force_wpqvp(:)) .and. check_missing(input_force_wpqtp(:))) then
-      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable wpqvp, wpqtp, wprvp, or wprtp should be present, but all are missing. Stopping ...'
+      write(error_unit,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable wpqvp, wpqtp, wprvp, or wprtp should be present, but all are missing. Stopping ...'
       error stop "The global attribute surfaceForcing indicates that the variable wpqvp, wpqtp, wprvp, or wprtp should be present, but all are missing."
     else
       if (.not. check_missing(input_force_wpqvp(:))) then !use wpqvp if available
@@ -2240,14 +2244,14 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
 
 
     if (check_missing(input_force_sfc_sens_flx(:))) then
-      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable sfc_sens_flx should be present, but it is missing. Stopping ...'
+      write(error_unit,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable sfc_sens_flx should be present, but it is missing. Stopping ...'
       error stop "The global attribute surfaceForcing in indicates that the variable sfc_sens_flx should be present, but it is missing."
     else
       scm_input%input_sh_flux_sfc = input_force_sfc_sens_flx(:)
     end if
 
     if (check_missing(input_force_sfc_lat_flx(:))) then
-      write(*,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable sfc_lat_flx should be present, but it is missing. Stopping ...'
+      write(error_unit,*) 'The global attribute surfaceForcing in '//trim(adjustl(scm_state%case_name))//'.nc indicates that the variable sfc_lat_flx should be present, but it is missing. Stopping ...'
       error stop "The global attribute surfaceForcing indicates that the variable sfc_lat_flx should be present, but it is missing."
     else
       scm_input%input_lh_flux_sfc = input_force_sfc_lat_flx(:)
@@ -2364,7 +2368,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   else if (input_surfaceForcingWind == 'ustar') then
     !not supported
     scm_state%surface_momentum_control = 1
-    write(*,*) 'The global attribute surfaceForcingWind in '//trim(adjustl(scm_state%case_name))//'.nc indicates that surface wind is controlled by a specified time-series of ustar. This is currently not supported. Stopping ...'
+    write(error_unit,*) 'The global attribute surfaceForcingWind in '//trim(adjustl(scm_state%case_name))//'.nc indicates that surface wind is controlled by a specified time-series of ustar. This is currently not supported. Stopping ...'
     error stop "The global attribute surfaceForcingWind indicates that surface wind is controlled by a specified time-series of ustar. This is currently not supported."
   end if
 
@@ -2466,7 +2470,7 @@ subroutine get_case_init_DEPHY(scm_state, scm_input)
   if (char_rad_temp == 'adv' .or. char_rad_theta == 'adv' .or. char_rad_thetal == 'adv') then
     scm_state%force_rad_T = 4
     if (scm_state%force_adv_T == 0) then
-      write(*,*) 'The global attribute rad_temp, rad_theta, or rad_thetal in '//trim(adjustl(scm_state%case_name))//'.nc indicates that radiative forcing is included in the advection term, but there is no advection term. Stopping ...'
+      write(error_unit,*) 'The global attribute rad_temp, rad_theta, or rad_thetal in '//trim(adjustl(scm_state%case_name))//'.nc indicates that radiative forcing is included in the advection term, but there is no advection term. Stopping ...'
       error stop "The global attribute rad_temp, rad_theta, or rad_thetal indicates that radiative forcing is included in the advection term, but there is no advection term."
     end if
   else if (rad_temp > 0) then
@@ -2762,8 +2766,8 @@ subroutine get_reference_profile(scm_state, scm_reference)
     case (1)
       open(unit=1, file='McCProfiles.dat', status='old', action='read', iostat=ioerror)
       if(ioerror /= 0) then
-        write(*,*) 'There was an error opening the file McCprofiles.dat in the processed_case_input directory. &
-          Error code = ',ioerror
+        write(error_unit,*) 'There was an error opening the file McCprofiles.dat in the processed_case_input directory. &
+          &Error code = ',ioerror
         error stop "There was an error opening the file McCprofiles.dat in the processed_case_input directory."
       endif
 
@@ -2872,7 +2876,7 @@ subroutine get_tracers(tracer_names, tracer_types)
             tracer_types(i) = 0 ! temporary until SCM is configured to work with GOCART
         end do
     else
-        write(*,'(a,i0)') 'There was an error opening the file ' // FILE_NAME // &
+        write(error_unit,'(a,i0)') 'There was an error opening the file ' // FILE_NAME // &
                           '; error code = ', rc
         error stop "Error opening tracers file"
     end if
