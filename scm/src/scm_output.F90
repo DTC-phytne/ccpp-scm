@@ -323,6 +323,7 @@ subroutine output_init_diag(ncid, time_inst_id, time_diag_id, time_rad_id, hor_d
   character(2) :: idx
   
   call NetCDF_def_var(ncid, 'pwat',            NF90_FLOAT, "column precipitable water", "kg m-2", dummy_id, (/ hor_dim_id, time_inst_id /)) !the variable is reset every timestep in GFS_MP_generic
+  call NetCDF_def_var(ncid, 'refl_10cm', NF90_FLOAT, "instantaneous refl_10cm",   "dBZ", dummy_id, (/ hor_dim_id, vert_dim_id, time_inst_id /))
   
   call output_init_tendency(ncid, 'dT_dt_lwrad',     "temperature tendency due to longwave radiation scheme",        "K s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_longwave))
   call output_init_tendency(ncid, 'dT_dt_swrad',     "temperature tendency due to shortwave radiation scheme",       "K s-1", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_temperature,physics%Model%index_of_process_shortwave))
@@ -698,6 +699,7 @@ subroutine output_append_diag_inst(ncid, scm_state, physics)
     real(kind=dp), dimension(scm_state%n_cols, scm_state%n_levels) :: temp_2d
     
     call NetCDF_put_var(ncid, "pwat",  physics%Diag%pwat(:), scm_state%itt_out)  !do not average (this variable is reset every physics timestep in GFS_MP_generic)
+    call NetCDF_put_var(ncid, "refl_10cm",  physics%Diag%refl_10cm(:,:), scm_state%itt_out)
     
     call NetCDF_put_var(ncid, "sfc_dwn_sw",  physics%Diag%dswsfci(:), scm_state%itt_out)  !do not average (this variable is intent(out) every physics timestep in dcyc2)
     call NetCDF_put_var(ncid, "sfc_up_sw",   physics%Diag%dswsfci(:) - physics%Diag%nswsfci(:), scm_state%itt_out)  !do not average (this variable is intent(out) every physics timestep in dcyc2)
