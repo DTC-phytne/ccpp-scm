@@ -10,10 +10,12 @@
   imp_physics  = 88
   iovr         = 3
   ltaerosol    = .false.
+  lthailaware  = .false.
   lradar       = .true.
   ttendlim     = -999
-  dt_inner     = 150
+  dt_inner     = 300
   sedi_semi    = .true.
+  do_sat_adj   = .false.
   decfl        = 10
   oz_phys      = .false.
   oz_phys_2015 = .true.
@@ -41,9 +43,10 @@
   min_seaice   = 1.0e-6
   use_cice_alb = .true.
   pdfcld       = .false.
-  fhswr        = 1200.
-  fhlwr        = 1200.
+  fhswr        = 3600.
+  fhlwr        = 3600.
   progsigma    = .true.
+  progomega    = .false.
   betascu      = 8.0
   betamcu      = 1.0
   betadcu      = 2.0
@@ -70,10 +73,11 @@
   random_clds  = .false.
   trans_trac   = .true.
   cnvcld       = .true.
+  xr_cnvcld    = .false.
   imfshalcnv   = 2
   imfdeepcnv   = 2
   ras          = .false.
-  cdmbgwd      = 2.5,7.5,1.0,1.0
+  cdmbgwd      = 20.0,2.5,1.0,1.0
   prslrd0      = 0.
   ivegsrc      = 1
   isot         = 1
@@ -85,6 +89,7 @@
   iopt_run     = 1
   iopt_sfc     = 3
   iopt_trs     = 2
+  iopt_diag    = 2
   iopt_frz     = 1
   iopt_inf     = 1
   iopt_rad     = 3

@@ -189,6 +189,11 @@ subroutine output_init_state(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_d
   call NetCDF_def_var(ncid, 'ql', NF90_FLOAT, "suspended resolved liquid cloud water on model layer centers",        "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
   call NetCDF_def_var(ncid, 'qi', NF90_FLOAT, "suspended resolved ice cloud water on model layer centers",           "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
   call NetCDF_def_var(ncid, 'qc', NF90_FLOAT, "suspended (resolved + SGS) total cloud water on model layer centers", "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  !zhang for TEMPO
+  call NetCDF_def_var(ncid, 'qr', NF90_FLOAT, "suspended resolved rain water on model layer centers",                "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  call NetCDF_def_var(ncid, 'qs', NF90_FLOAT, "suspended resolved snow water on model layer centers",                "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  call NetCDF_def_var(ncid, 'qg', NF90_FLOAT, "suspended resolved graupel water on model layer centers",             "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+
   if (scm_state%sigmab_index > 0) then
     call NetCDF_def_var(ncid, 'sigmab', NF90_FLOAT, "updraft area fraction at lowest model layer",                    "frac",     dummy_id, (/ hor_dim_id,                 time_inst_id /))
   end if
@@ -505,6 +510,11 @@ subroutine output_append_state(ncid, scm_state, physics)
   call NetCDF_put_var(ncid, "v",       scm_state%state_v(:,:,1), scm_state%itt_out)
   call NetCDF_put_var(ncid, "ql",      scm_state%state_tracer(:,:,scm_state%cloud_water_index,1), scm_state%itt_out)
   call NetCDF_put_var(ncid, "qi",      scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1), scm_state%itt_out)
+  !zhang
+  call NetCDF_put_var(ncid, "qr",      scm_state%state_tracer(:,:,scm_state%rain_index,1), scm_state%itt_out)
+  call NetCDF_put_var(ncid, "qs",      scm_state%state_tracer(:,:,scm_state%snow_index,1), scm_state%itt_out)
+  call NetCDF_put_var(ncid, "qg",      scm_state%state_tracer(:,:,scm_state%graupel_index,1), scm_state%itt_out)
+
   if (scm_state%sigmab_index > 0) then
     call NetCDF_put_var(ncid, "sigmab",  scm_state%state_tracer(:,1,scm_state%sigmab_index,1), scm_state%itt_out)
   endif

@@ -5,7 +5,7 @@ module GFS_typedefs
 
    use module_radsw_parameters,  only: topfsw_type, sfcfsw_type, NBDSW
    use module_radlw_parameters,  only: topflw_type, sfcflw_type, NBDLW
-   use module_mp_tempo_params,   only: ty_tempo_cfg
+   use module_mp_tempo_cfgs,   only: ty_tempo_cfgs
    use module_ozphys,            only: ty_ozphys
    use module_h2ophys,           only: ty_h2ophys
    use module_ccpp_suite_simulator, only: base_physics_process
@@ -1066,8 +1066,11 @@ module GFS_typedefs
     real(kind=kind_phys) :: dt_inner        !< time step for the inner loop in s
     logical              :: sedi_semi       !< flag for semi Lagrangian sedi of rain
     integer              :: decfl           !< deformed CFL factor
-    type(ty_tempo_cfg)   :: tempo_cfg       !< Thompson MP configuration information.
+    type(ty_tempo_cfgs)   :: tempo_cfgs       !< Thompson MP configuration information.
     logical              :: thompson_mp_is_init=.false. !< Local scheme initialization flag
+    logical              :: tempo_mp_is_init=.false. !< Local scheme initialization flag
+    !zhang
+    logical              :: do_sat_adj
     real(kind=kind_phys) :: nt_c_l          !< prescribed cloud liquid water number concentration over land
     real(kind=kind_phys) :: nt_c_o          !< prescribed cloud liquid water number concentration over ocean
     real(kind=kind_phys) :: av_i            !< transition value of coefficient matching at crossover from cloud ice to snow
@@ -3367,9 +3370,17 @@ module GFS_typedefs
     endif
 
     !--- needed for Thompson's aerosol option
-    if((Model%imp_physics == Model%imp_physics_thompson .or. &
-         Model%imp_physics == Model%imp_physics_tempo) .and. &
+    if((Model%imp_physics == Model%imp_physics_thompson) .and. &
          (Model%ltaerosol .or. Model%mraerosol)) then
+      allocate (Coupling%nwfa2d (IM))
+      allocate (Coupling%nifa2d (IM))
+      Coupling%nwfa2d   = clear_val
+      Coupling%nifa2d   = clear_val
+    endif
+
+    !--- needed for Tempo's aerosol option
+    if((Model%imp_physics == Model%imp_physics_tempo) .and. &
+         (Model%ltaerosol)) then
       allocate (Coupling%nwfa2d (IM))
       allocate (Coupling%nifa2d (IM))
       Coupling%nwfa2d   = clear_val
@@ -3719,6 +3730,8 @@ module GFS_typedefs
     logical              :: ext_diag_thompson = .false.         !< flag for extended diagnostic output from Thompson
     real(kind=kind_phys) :: dt_inner       = -999.0             !< time step for the inner loop
     logical              :: sedi_semi      = .false.            !< flag for semi Lagrangian sedi of rain
+    !zhang
+    logical              :: do_sat_adj     = .false.
     integer              :: decfl          = 8                  !< deformed CFL factor
     real(kind=kind_phys) :: nt_c_l         = 150.e6             !< prescribed cloud liquid water number concentration over land
     real(kind=kind_phys) :: nt_c_o         = 50.e6              !< prescribed cloud liquid water number concentration over ocean
@@ -4263,6 +4276,8 @@ module GFS_typedefs
                                ssati_min, Nt_i_max, rr_min, fs_fac_rain, fs_fac_snow,       &
                                dt_inner, lgfdlmprad,                                        &
                                sedi_semi, decfl,                                            &
+                          ! zhang
+                               do_sat_adj,                                                  &
                                nssl_cccn, nssl_alphah, nssl_alphahl,                        &
                                nssl_alphar, nssl_ehw0, nssl_ehlw0,                          &
                                nssl_invertccn, nssl_hail_on, nssl_ccn_on, nssl_3moment,     &
@@ -5048,6 +5063,8 @@ module GFS_typedefs
       Model%dt_inner       = Model%dtp
     endif
     Model%sedi_semi        = sedi_semi
+    !zhang
+    Model%do_sat_adj       = do_sat_adj
     Model%decfl            = decfl
     Model%nt_c_l           = nt_c_l
     Model%nt_c_o           = nt_c_o
@@ -5061,12 +5078,13 @@ module GFS_typedefs
 
 !--- TEMPO MP parameters
     ! DJS to Anders: Maybe we put more of these nml options into the TEMPO configuration type?
-    Model%tempo_cfg%aerosol_aware = (ltaerosol .or. mraerosol)
-    Model%tempo_cfg%hail_aware    = lthailaware
-    if (Model%ltaerosol .and. Model%mraerosol) then
-       write(0,*) 'Logic error: Only one TEMPO aerosol option can be true, either ltaerosol or mraerosol)'
-       stop
-    end if
+    Model%tempo_cfgs%aerosolaware_flag = ltaerosol
+    Model%tempo_cfgs%hailaware_flag    = lthailaware
+
+!    if (Model%ltaerosol .and. Model%mraerosol) then
+!       write(0,*) 'Logic error: Only one TEMPO aerosol option can be true, either ltaerosol or mraerosol)'
+!       stop
+!   end if
 
 !--- F-A MP parameters
     Model%rhgrd            = rhgrd
@@ -6522,6 +6540,7 @@ module GFS_typedefs
                                           ' ext_diag_thompson =',Model%ext_diag_thompson, &
                                           ' dt_inner =',Model%dt_inner, &
                                           ' sedi_semi=',Model%sedi_semi, &
+                                          ' do_sat_adj=', Model%do_sat_adj, &
                                           ' decfl=',decfl, &
                                           ' nt_c_l=',nt_c_l, &
                                           ' nt_c_o=',nt_c_o, &
@@ -7123,6 +7142,8 @@ module GFS_typedefs
         print *, ' ext_diag_thompson : ', Model%ext_diag_thompson
         print *, ' dt_inner          : ', Model%dt_inner
         print *, ' sedi_semi         : ', Model%sedi_semi
+        !zhang
+        print *, ' do_sat_adj        : ', Model%do_sat_adj
         print *, ' decfl             : ', Model%decfl
         print *, ' nt_c_l            : ', Model%nt_c_l
         print *, ' nt_c_o            : ', Model%nt_c_o
